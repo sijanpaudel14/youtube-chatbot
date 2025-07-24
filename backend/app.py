@@ -2,8 +2,6 @@
 FastAPI backend for YouTube RAG Chatbot
 Integrates with the existing main.py chatbot logic
 """
-from main import YouTubeRAGChatbot
-from youtube_utils import extract_video_id, validate_video_id
 from typing import Optional, List
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,6 +20,8 @@ load_dotenv(env_path)
 
 # Now import our modules after environment and path are set up
 
+from main import YouTubeRAGChatbot
+from youtube_utils import extract_video_id, validate_video_id
 
 # Debug: Check if environment variable is loaded
 google_api_key = os.getenv("GOOGLE_API_KEY")
