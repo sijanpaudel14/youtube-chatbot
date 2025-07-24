@@ -39,25 +39,17 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-        "https://youtube-video-summarizer-ey8393493-sijan-paudels-projects.vercel.app",
-        "https://youtube-video-summarizer-phi.vercel.app",
-        "https://youtube-rag-backend-5eik.onrender.com",
-        "https://youtube-chatbot-gr17.onrender.com",
-        # Add common Vercel deployment patterns
+        "http://localhost:3001", 
+        "http://localhost:3002",
         "https://*.vercel.app",
-        "https://*.netlify.app",
-        # Allow any localhost for development
-        "http://localhost:*",
+        "https://youtube-chatbot*.vercel.app",
+        "https://youtube-rag*.vercel.app",
+        "https://youtube-chatbot-b8het3dg3-sijan-paudels-projects.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
-
-# Global storage for chatbot instances (in production, use Redis or database)
+)# Global storage for chatbot instances (in production, use Redis or database)
 chatbot_instances = {}
 
 
