@@ -7,11 +7,11 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://youtube-rag-backend-5eik.onrender.com"
+    "NEXT_PUBLIC_BACKEND_URL": "https://youtube-chatbot-gr17.onrender.com"
   },
   "build": {
     "env": {
-      "NEXT_PUBLIC_API_URL": "https://youtube-rag-backend-5eik.onrender.com"
+      "NEXT_PUBLIC_BACKEND_URL": "https://youtube-chatbot-gr17.onrender.com"
     }
   },
   "functions": {

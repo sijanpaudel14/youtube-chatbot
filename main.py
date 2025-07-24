@@ -150,8 +150,8 @@ class YouTubeRAGChatbot:
         # Set up LLM
         self.llm = ChatGoogleGenerativeAI(
             model=self.config.LLM_MODEL,
-            temperature=self.config.LLM_TEMPERATURE,
-            convert_system_message_to_human=True
+            temperature=self.config.LLM_TEMPERATURE
+    
         )
 
     def extract_transcript(self, video_id: str) -> str:

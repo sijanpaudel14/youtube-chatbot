@@ -2,7 +2,6 @@
 FastAPI backend for YouTube RAG Chatbot
 Integrates with the existing main.py chatbot logic
 """
-
 from typing import Optional, List
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,8 +19,9 @@ env_path = os.path.join(parent_dir, ".env")
 load_dotenv(env_path)
 
 # Now import our modules after environment and path are set up
-from main import YouTubeRAGChatbot
+
 from youtube_utils import extract_video_id, validate_video_id
+from main import YouTubeRAGChatbot
 
 # Debug: Check if environment variable is loaded
 google_api_key = os.getenv("GOOGLE_API_KEY")
@@ -39,10 +39,18 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "http://localhost:3001",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
         "https://youtube-video-summarizer-ey8393493-sijan-paudels-projects.vercel.app",
         "https://youtube-video-summarizer-phi.vercel.app",
-        "https://youtube-rag-backend-5eik.onrender.com"
+        "https://youtube-rag-backend-5eik.onrender.com",
+        "https://youtube-chatbot-gr17.onrender.com",
+        # Add common Vercel deployment patterns
+        "https://*.vercel.app",
+        "https://*.netlify.app",
+        # Allow any localhost for development
+        "http://localhost:*",
     ],
     allow_credentials=True,
     allow_methods=["*"],
