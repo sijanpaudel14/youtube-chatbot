@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Send,
   Bot,
@@ -22,13 +22,35 @@ interface Message {
 
 interface ChatInterfaceProps {
   videoId: string
+  messages?: Message[]
+  onMessagesChange?: (messages: Message[]) => void
 }
 
-export default function ChatInterface({ videoId }: ChatInterfaceProps) {
-  const [messages, setMessages] = useState<Message[]>([])
+export default function ChatInterface({
+  videoId,
+  messages: initialMessages = [],
+  onMessagesChange,
+}: ChatInterfaceProps) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Update messages when initialMessages changes (video changes)
+  useEffect(() => {
+    setMessages(initialMessages)
+  }, [initialMessages, videoId])
+
+  // Call parent callback when messages change
+  const updateMessages = useCallback(
+    (newMessages: Message[]) => {
+      setMessages(newMessages)
+      if (onMessagesChange) {
+        onMessagesChange(newMessages)
+      }
+    },
+    [onMessagesChange]
+  )
 
   const formatTimestamp = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600)
@@ -58,17 +80,19 @@ export default function ChatInterface({ videoId }: ChatInterfaceProps) {
   }, [messages])
 
   useEffect(() => {
-    // Welcome message
-    setMessages([
-      {
-        id: '1',
-        type: 'bot',
-        content:
-          "👋 Hi! I've analyzed the video and I'm ready to answer your questions. You can ask me about the main topics, key points, specific details, or request a summary!",
-        timestamp: new Date(),
-      },
-    ])
-  }, [videoId])
+    // Set welcome message only if no messages exist
+    if (initialMessages.length === 0) {
+      updateMessages([
+        {
+          id: '1',
+          type: 'bot',
+          content:
+            "👋 Hi! I've analyzed the video and I'm ready to answer your questions. You can ask me about the main topics, key points, specific details, or request a summary!",
+          timestamp: new Date(),
+        },
+      ])
+    }
+  }, [videoId, initialMessages.length, updateMessages])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,7 +105,7 @@ export default function ChatInterface({ videoId }: ChatInterfaceProps) {
       timestamp: new Date(),
     }
 
-    setMessages((prev) => [...prev, userMessage])
+    updateMessages([...messages, userMessage])
     const currentInput = input.trim()
     setInput('')
     setIsLoading(true)
@@ -101,7 +125,7 @@ export default function ChatInterface({ videoId }: ChatInterfaceProps) {
         timestamps: data.timestamps,
       }
 
-      setMessages((prev) => [...prev, botMessage])
+      updateMessages([...messages, userMessage, botMessage])
     } catch (error) {
       console.error('Error calling backend:', error)
       const errorMessage: Message = {
@@ -112,7 +136,7 @@ export default function ChatInterface({ videoId }: ChatInterfaceProps) {
         }. Please try again.`,
         timestamp: new Date(),
       }
-      setMessages((prev) => [...prev, errorMessage])
+      updateMessages([...messages, userMessage, errorMessage])
     } finally {
       setIsLoading(false)
     }

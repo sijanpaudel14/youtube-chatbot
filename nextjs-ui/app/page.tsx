@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Play,
   MessageCircle,
@@ -34,6 +34,39 @@ export default function Home() {
   const [showTranscriptSelector, setShowTranscriptSelector] = useState(false)
   const [isLoadingTranscripts, setIsLoadingTranscripts] = useState(false)
   const [activeTab, setActiveTab] = useState('chat')
+
+  // Chat history state to persist across navigation
+  const [chatHistory, setChatHistory] = useState<any[]>([])
+
+  // Load chat history from localStorage on component mount
+  useEffect(() => {
+    if (videoId) {
+      const savedHistory = localStorage.getItem(`chatHistory_${videoId}`)
+      if (savedHistory) {
+        try {
+          const parsedHistory = JSON.parse(savedHistory)
+          setChatHistory(parsedHistory)
+        } catch (error) {
+          console.error('Error parsing saved chat history:', error)
+        }
+      }
+    }
+  }, [videoId])
+
+  // Save chat history to localStorage when it changes
+  const updateChatHistory = (newHistory: any[]) => {
+    setChatHistory(newHistory)
+    if (videoId) {
+      if (newHistory.length > 0) {
+        localStorage.setItem(
+          `chatHistory_${videoId}`,
+          JSON.stringify(newHistory)
+        )
+      } else {
+        localStorage.removeItem(`chatHistory_${videoId}`)
+      }
+    }
+  }
 
   // Cache for API responses to avoid redundant calls
   const [analyticsCache, setAnalyticsCache] = useState<any>(null)
@@ -115,6 +148,7 @@ export default function Home() {
     try {
       const id = extractVideoId(videoUrl)
       setVideoId(id)
+      updateChatHistory([]) // Clear chat history for new video
 
       // Call the actual API to process the video with selected language
       const response = await api.processVideo({
@@ -143,6 +177,7 @@ export default function Home() {
     setShowTranscriptSelector(false)
     setAvailableTranscripts([])
     setSelectedLanguage('en')
+    updateChatHistory([]) // Clear chat history
     // Clear all cached data when resetting
     clearCache()
   }
@@ -192,7 +227,13 @@ export default function Home() {
 
               {/* Tab Content */}
               <div className='flex-1 bg-white rounded-b-lg overflow-hidden'>
-                {activeTab === 'chat' && <ChatInterface videoId={videoId} />}
+                {activeTab === 'chat' && (
+                  <ChatInterface
+                    videoId={videoId}
+                    messages={chatHistory}
+                    onMessagesChange={updateChatHistory}
+                  />
+                )}
                 {activeTab === 'analytics' && (
                   <AnalyticsDashboard
                     videoId={videoId}
