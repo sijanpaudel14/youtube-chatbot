@@ -14,6 +14,8 @@ import {
   Search,
   Heart,
   FileText,
+  Menu,
+  X,
 } from 'lucide-react'
 import ChatInterface from './components/ChatInterface'
 import VideoDisplay from './components/VideoDisplay'
@@ -34,9 +36,43 @@ export default function Home() {
   const [showTranscriptSelector, setShowTranscriptSelector] = useState(false)
   const [isLoadingTranscripts, setIsLoadingTranscripts] = useState(false)
   const [activeTab, setActiveTab] = useState('chat')
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   // Chat history state to persist across navigation
   const [chatHistory, setChatHistory] = useState<any[]>([])
+
+  // Debug menu state changes
+  useEffect(() => {
+    // Menu state tracking for development
+  }, [isMenuOpen])
+
+  // Track when menu item is selected (for potential future use)
+  const [menuTabSelected, setMenuTabSelected] = useState(false)
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      const menuButton = document.querySelector('[aria-label="Toggle menu"]')
+      const menuDropdown = document.getElementById('main-navigation-dropdown')
+
+      if (
+        isMenuOpen &&
+        !menuButton?.contains(target) &&
+        !menuDropdown?.contains(target)
+      ) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isMenuOpen])
 
   // Load chat history from localStorage on component mount
   useEffect(() => {
@@ -191,42 +227,171 @@ export default function Home() {
       { id: 'summary', label: 'Summary', icon: FileText },
     ]
 
+    const primaryTab = tabs[0] // Chat tab
+    const menuTabs = tabs.slice(1) // Analytics, Multi-Search, Sentiment, Summary
+
     return (
       <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50'>
         <div className='container mx-auto px-4 py-6'>
-          <div className='flex flex-col lg:flex-row gap-6 h-screen'>
+          <div className='flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-3rem)]'>
             {/* Video Display */}
-            <div className='lg:w-1/3'>
+            <div className='lg:w-1/3 min-h-0'>
               <VideoDisplay videoId={videoId} onReset={resetApp} />
             </div>
 
             {/* Main Content Area with Tabs */}
-            <div className='lg:w-2/3 flex flex-col'>
+            <div className='lg:w-2/3 flex flex-col relative min-h-0'>
               {/* Tab Navigation */}
-              <div className='bg-white rounded-t-lg border-b border-gray-200 p-1'>
-                <div className='flex space-x-1'>
-                  {tabs.map((tab) => {
-                    const IconComponent = tab.icon
-                    return (
+              <div className='bg-white rounded-t-lg border-b border-gray-200 p-1 relative'>
+                <div className='flex items-center justify-between'>
+                  {/* Desktop Tab Navigation */}
+                  <div className='hidden md:flex space-x-1 flex-1'>
+                    {tabs.map((tab) => {
+                      const IconComponent = tab.icon
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            setActiveTab(tab.id)
+                          }}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            activeTab === tab.id
+                              ? 'bg-blue-100 text-blue-700 shadow-sm'
+                              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          <IconComponent className='w-4 h-4' />
+                          {tab.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Mobile Navigation */}
+                  <div className='md:hidden flex items-center justify-between w-full'>
+                    {/* Chat Tab (always visible on mobile) */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('chat')
+                        setIsMenuOpen(false)
+                      }}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === 'chat'
+                          ? 'bg-blue-100 text-blue-700 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <MessageCircle className='w-4 h-4' />
+                      Chat
+                    </button>
+
+                    {/* Current Active Tab (if not Chat) */}
+                    {activeTab !== 'chat' && (
+                      <div className='flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium'>
+                        {(() => {
+                          const currentTab = tabs.find(
+                            (tab) => tab.id === activeTab
+                          )
+                          if (currentTab) {
+                            const IconComponent = currentTab.icon
+                            return (
+                              <>
+                                <IconComponent className='w-4 h-4' />
+                                {currentTab.label}
+                              </>
+                            )
+                          }
+                          return null
+                        })()}
+                      </div>
+                    )}
+
+                    {/* Hamburger Menu Button */}
+                    <div className='relative'>
                       <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          activeTab === tab.id
-                            ? 'bg-blue-100 text-blue-700 shadow-sm'
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setIsMenuOpen(!isMenuOpen)
+                        }}
+                        className={`p-2 rounded-lg transition-all duration-200 ${
+                          isMenuOpen
+                            ? 'bg-blue-100 text-blue-700'
                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
+                        aria-label='Toggle menu'
+                        type='button'
                       >
-                        <IconComponent className='w-4 h-4' />
-                        {tab.label}
+                        {isMenuOpen ? (
+                          <X className='w-5 h-5' />
+                        ) : (
+                          <Menu className='w-5 h-5' />
+                        )}
                       </button>
-                    )
-                  })}
+
+                      {/* Active indicator for non-chat tabs */}
+                      {activeTab !== 'chat' && !isMenuOpen && (
+                        <div className='absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full border-2 border-white animate-pulse' />
+                      )}
+                    </div>
+                  </div>
                 </div>
+
+                {/* Mobile Dropdown Menu */}
+                {isMenuOpen && (
+                  <>
+                    {/* Backdrop */}
+                    <div
+                      className='md:hidden fixed inset-0 z-40 bg-black bg-opacity-25'
+                      onClick={() => setIsMenuOpen(false)}
+                    />
+
+                    {/* Dropdown Menu */}
+                    <div
+                      id='main-navigation-dropdown'
+                      className='md:hidden absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-b-lg shadow-xl overflow-hidden animate-in slide-in-from-top-2 duration-200'
+                    >
+                      {/* Menu Header */}
+                      <div className='px-4 py-2 bg-gray-50 border-b border-gray-100'>
+                        <p className='text-xs font-medium text-gray-500 uppercase tracking-wide'>
+                          More Options
+                        </p>
+                      </div>
+
+                      <div className='p-2 space-y-1 max-h-64 overflow-y-auto'>
+                        {menuTabs.map((tab, index) => {
+                          const IconComponent = tab.icon
+                          return (
+                            <button
+                              key={tab.id}
+                              onClick={() => {
+                                setActiveTab(tab.id)
+                                setMenuTabSelected(true)
+                                setIsMenuOpen(false)
+                              }}
+                              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left animate-in slide-in-from-left-1 ${
+                                activeTab === tab.id
+                                  ? 'bg-blue-100 text-blue-700 shadow-sm border-l-4 border-blue-600'
+                                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                              }`}
+                              style={{ animationDelay: `${index * 50}ms` }}
+                            >
+                              <IconComponent className='w-4 h-4 flex-shrink-0' />
+                              <span className='truncate'>{tab.label}</span>
+                              {activeTab === tab.id && (
+                                <div className='ml-auto w-2 h-2 bg-blue-600 rounded-full' />
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Tab Content */}
-              <div className='flex-1 bg-white rounded-b-lg overflow-hidden'>
+              <div className='flex-1 bg-white rounded-b-lg overflow-y-auto'>
                 {activeTab === 'chat' && (
                   <ChatInterface
                     videoId={videoId}

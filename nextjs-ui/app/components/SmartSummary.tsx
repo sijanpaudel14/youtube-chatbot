@@ -13,9 +13,10 @@ import {
   BookOpen,
   Target,
   Lightbulb,
+  Menu,
+  X,
 } from 'lucide-react'
 import { api, SummaryResponse, SentimentResponse } from './../lib/api'
-
 
 interface SmartSummaryProps {
   videoId: string
@@ -44,6 +45,8 @@ export default function SmartSummary({
   const [activeTab, setActiveTab] = useState<
     'brief' | 'detailed' | 'takeaways' | 'technical'
   >('brief')
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [menuTabSelected, setMenuTabSelected] = useState(false)
 
   useEffect(() => {
     // If we have cached data, use it and don't make API call
@@ -59,6 +62,43 @@ export default function SmartSummary({
       fetchSummaryData()
     }
   }, [videoId, cachedData])
+
+  // Close menu when active tab changes (only when tab is actually selected from menu)
+  useEffect(() => {
+    if (menuTabSelected) {
+      setIsMenuOpen(false)
+      setMenuTabSelected(false)
+    }
+  }, [activeTab, menuTabSelected])
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      const menuButton = document.querySelector(
+        '[data-summary-menu-toggle="true"]'
+      )
+      const menuDropdown = document.querySelector(
+        '[data-summary-menu-dropdown="true"]'
+      )
+
+      if (
+        isMenuOpen &&
+        !menuButton?.contains(target) &&
+        !menuDropdown?.contains(target)
+      ) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isMenuOpen])
 
   const fetchSummaryData = async () => {
     try {
@@ -132,6 +172,100 @@ export default function SmartSummary({
     }
   }
 
+  // Function to parse markdown-style formatting and clean up numbering
+  const parseMarkdownText = (text: string) => {
+    // Clean up the text first
+    let cleanedText = text
+      // Remove standalone numbers at the beginning of lines
+      .replace(/^\d+\s*$/gm, '')
+      // Remove bullet points and replace with proper formatting
+      .replace(/^\*\s+/gm, '• ')
+      // Remove excessive line breaks
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+
+    // Replace **text** with <strong>text</strong>
+    const boldRegex = /\*\*(.*?)\*\*/g
+    
+    const parts = []
+    let lastIndex = 0
+    let match
+    
+    while ((match = boldRegex.exec(cleanedText)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        const textBefore = cleanedText.slice(lastIndex, match.index)
+        // Split by newlines and create proper line breaks
+        const lines = textBefore.split('\n')
+        lines.forEach((line, lineIndex) => {
+          if (lineIndex > 0) parts.push(<br key={`br-${match.index}-${lineIndex}`} />)
+          if (line.trim()) parts.push(line)
+        })
+      }
+      
+      // Add the bold text
+      parts.push(<strong key={match.index} className="font-semibold text-gray-900">{match[1]}</strong>)
+      
+      lastIndex = match.index + match[0].length
+    }
+    
+    // Add remaining text
+    if (lastIndex < cleanedText.length) {
+      const remainingText = cleanedText.slice(lastIndex)
+      const lines = remainingText.split('\n')
+      lines.forEach((line, lineIndex) => {
+        if (lineIndex > 0) parts.push(<br key={`br-end-${lineIndex}`} />)
+        if (line.trim()) parts.push(line)
+      })
+    }
+    
+    return parts.length > 0 ? parts : [cleanedText]
+  }
+
+  // Function to process and split key takeaways properly
+  const processKeyTakeaways = (takeaways: string[]) => {
+    const processed = []
+    
+    for (const takeaway of takeaways) {
+      // Split by lines and process each
+      const lines = takeaway.split('\n')
+      let currentTakeaway = ''
+      
+      for (const line of lines) {
+        const trimmedLine = line.trim()
+        
+        // Skip empty lines and standalone numbers
+        if (!trimmedLine || /^\d+$/.test(trimmedLine)) {
+          continue
+        }
+        
+        // If line starts with * or bullet, it's a new takeaway
+        if (trimmedLine.startsWith('*') || trimmedLine.startsWith('•')) {
+          // Save previous takeaway if it exists
+          if (currentTakeaway) {
+            processed.push(currentTakeaway.trim())
+          }
+          // Start new takeaway without the bullet
+          currentTakeaway = trimmedLine.replace(/^[\*•]\s*/, '')
+        } else {
+          // Continue current takeaway
+          if (currentTakeaway) {
+            currentTakeaway += ' ' + trimmedLine
+          } else {
+            currentTakeaway = trimmedLine
+          }
+        }
+      }
+      
+      // Add the last takeaway
+      if (currentTakeaway) {
+        processed.push(currentTakeaway.trim())
+      }
+    }
+    
+    return processed.filter(t => t.length > 0)
+  }
+
   const tabs = [
     { id: 'brief', label: 'Brief Summary', icon: FileText },
     { id: 'detailed', label: 'Detailed', icon: BookOpen },
@@ -144,7 +278,9 @@ export default function SmartSummary({
       <div className='bg-white rounded-lg border border-gray-200 p-6'>
         <div className='flex flex-col items-center justify-center py-12'>
           <RefreshCw className='w-8 h-8 animate-spin text-blue-600 mb-4' />
-          <span className='text-gray-600 text-lg font-medium mb-2'>Generating AI summary...</span>
+          <span className='text-gray-600 text-lg font-medium mb-2'>
+            Generating AI summary...
+          </span>
           <div className='text-sm text-gray-500 text-center max-w-md'>
             <p className='mb-2'>⚡ Analyzing video content with AI</p>
             <p className='mb-2'>📊 Processing sentiment analysis</p>
@@ -185,7 +321,7 @@ export default function SmartSummary({
   }
 
   return (
-    <div className='bg-white rounded-lg border border-gray-200 overflow-hidden'>
+    <div className='bg-white rounded-lg border border-gray-200 h-full overflow-y-auto'>
       {/* Header */}
       <div className='px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50'>
         <div className='flex items-center justify-between'>
@@ -248,8 +384,9 @@ export default function SmartSummary({
       </div>
 
       {/* Tab Navigation */}
-      <div className='border-b border-gray-200'>
-        <nav className='flex space-x-8 px-6'>
+      <div className='border-b border-gray-200 relative'>
+        {/* Desktop Navigation */}
+        <nav className='hidden md:flex space-x-8 px-6'>
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
@@ -268,6 +405,105 @@ export default function SmartSummary({
             )
           })}
         </nav>
+
+        {/* Mobile Navigation */}
+        <div className='md:hidden px-6 py-3'>
+          <div className='flex items-center justify-between'>
+            {/* Current Active Tab */}
+            <div className='flex items-center gap-2'>
+              {(() => {
+                const currentTab = tabs.find((tab) => tab.id === activeTab)
+                if (currentTab) {
+                  const IconComponent = currentTab.icon
+                  return (
+                    <>
+                      <IconComponent className='w-4 h-4 text-blue-600' />
+                      <span className='font-medium text-blue-600'>
+                        {currentTab.label}
+                      </span>
+                    </>
+                  )
+                }
+                return null
+              })()}
+            </div>
+
+            {/* Hamburger Menu Button */}
+            <div className='relative'>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setIsMenuOpen(!isMenuOpen)
+                }}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  isMenuOpen
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+                data-summary-menu-toggle='true'
+                type='button'
+              >
+                {isMenuOpen ? (
+                  <X className='w-5 h-5' />
+                ) : (
+                  <Menu className='w-5 h-5' />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Dropdown Menu */}
+          {isMenuOpen && (
+            <>
+              {/* Backdrop */}
+              <div
+                className='fixed inset-0 z-40 bg-black bg-opacity-25'
+                onClick={() => setIsMenuOpen(false)}
+              />
+
+              {/* Dropdown Menu */}
+              <div
+                className='absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-b-lg shadow-xl overflow-hidden animate-in slide-in-from-top-2 duration-200'
+                data-summary-menu-dropdown='true'
+              >
+                {/* Menu Header */}
+                <div className='px-4 py-2 bg-gray-50 border-b border-gray-100'>
+                  <p className='text-xs font-medium text-gray-500 uppercase tracking-wide'>
+                    Summary Options
+                  </p>
+                </div>
+
+                <div className='p-2 space-y-1'>
+                  {tabs.map((tab, index) => {
+                    const IconComponent = tab.icon
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id)
+                          setMenuTabSelected(true)
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left animate-in slide-in-from-left-1 ${
+                          activeTab === tab.id
+                            ? 'bg-blue-100 text-blue-700 shadow-sm border-l-4 border-blue-600'
+                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                        }`}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <IconComponent className='w-4 h-4 flex-shrink-0' />
+                        <span className='truncate'>{tab.label}</span>
+                        {activeTab === tab.id && (
+                          <div className='ml-auto w-2 h-2 bg-blue-600 rounded-full' />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -283,9 +519,9 @@ export default function SmartSummary({
               <h4 className='font-semibold text-blue-900 mb-2'>
                 30-Second Summary
               </h4>
-              <p className='text-gray-700 leading-relaxed'>
-                {summary.brief_summary}
-              </p>
+              <div className='text-gray-700 leading-relaxed'>
+                {parseMarkdownText(summary.brief_summary)}
+              </div>
             </div>
           </div>
         )}
@@ -298,9 +534,9 @@ export default function SmartSummary({
                 Comprehensive Analysis
               </h4>
               <div className='prose prose-gray max-w-none'>
-                <p className='text-gray-700 leading-relaxed whitespace-pre-wrap'>
-                  {summary.detailed_summary}
-                </p>
+                <div className='text-gray-700 leading-relaxed whitespace-pre-wrap'>
+                  {parseMarkdownText(summary.detailed_summary)}
+                </div>
               </div>
             </div>
           </div>
@@ -314,12 +550,14 @@ export default function SmartSummary({
                 Key Takeaways
               </h4>
               <div className='space-y-2'>
-                {summary.key_takeaways.map((takeaway, index) => (
+                {processKeyTakeaways(summary.key_takeaways).map((takeaway, index) => (
                   <div key={index} className='flex items-start gap-3'>
                     <div className='flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold'>
                       {index + 1}
                     </div>
-                    <p className='text-gray-700 leading-relaxed'>{takeaway}</p>
+                    <div className='text-gray-700 leading-relaxed'>
+                      {parseMarkdownText(takeaway)}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -339,7 +577,9 @@ export default function SmartSummary({
                   summary.technical_concepts.map((concept, index) => (
                     <div key={index} className='flex items-start gap-3'>
                       <Tag className='w-4 h-4 text-purple-600 mt-1 flex-shrink-0' />
-                      <p className='text-gray-700 leading-relaxed'>{concept}</p>
+                      <div className='text-gray-700 leading-relaxed'>
+                        {parseMarkdownText(concept)}
+                      </div>
                     </div>
                   ))
                 ) : (

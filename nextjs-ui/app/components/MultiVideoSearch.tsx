@@ -98,7 +98,7 @@ export default function MultiVideoSearch({
   }
 
   return (
-    <div className='bg-white rounded-lg border border-gray-200 overflow-hidden'>
+    <div className='bg-white rounded-lg border border-gray-200 h-full overflow-y-auto'>
       {/* Header */}
       <div className='px-6 py-4 bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200'>
         <div className='flex items-center justify-between'>

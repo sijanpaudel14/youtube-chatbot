@@ -16,9 +16,9 @@ export default function VideoDisplay({ videoId, onReset }: VideoDisplayProps) {
   const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
 
   return (
-    <div className='h-full flex flex-col'>
+    <div className='h-full flex flex-col min-h-0'>
       {/* Header */}
-      <div className='bg-white rounded-2xl shadow-xl border border-gray-200 p-4 mb-4'>
+      <div className='bg-white rounded-2xl shadow-xl border border-gray-200 p-4 mb-4 flex-shrink-0'>
         <div className='flex items-center justify-between'>
           <button
             onClick={onReset}
@@ -41,8 +41,8 @@ export default function VideoDisplay({ videoId, onReset }: VideoDisplayProps) {
       </div>
 
       {/* Video Player */}
-      <div className='bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex-1 flex flex-col'>
-        <div className='aspect-video bg-black relative'>
+      <div className='bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex-1 flex flex-col min-h-0'>
+        <div className='aspect-video bg-black relative flex-shrink-0 max-h-[40vh]'>
           <iframe
             src={embedUrl}
             title='YouTube video player'
@@ -53,32 +53,32 @@ export default function VideoDisplay({ videoId, onReset }: VideoDisplayProps) {
         </div>
 
         {/* Video Info */}
-        <div className='p-4 flex-1 flex flex-col'>
-          <div className='mb-4'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-              Video Analysis Ready
-            </h3>
-            <p className='text-sm text-gray-600 mb-3'>
-              This video has been processed and is ready for Q&A. You can ask
-              questions about any part of the content.
-            </p>
+        <div className='p-4 flex-1 flex flex-col min-h-0'>
+          <div className='flex-1 overflow-y-auto min-h-0'>
+            <div className='mb-4'>
+              <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+                Video Analysis Ready
+              </h3>
+              <p className='text-sm text-gray-600 mb-3'>
+                This video has been processed and is ready for Q&A. You can ask
+                questions about any part of the content.
+              </p>
 
-            <div className='flex flex-wrap gap-2 mb-4'>
-              <span className='px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full'>
-                ✓ Transcript Extracted
-              </span>
-              <span className='px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full'>
-                ✓ AI Analysis Complete
-              </span>
-              <span className='px-3 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full'>
-                ✓ Ready for Q&A
-              </span>
+              <div className='flex flex-wrap gap-2 mb-4'>
+                <span className='px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full'>
+                  ✓ Transcript Extracted
+                </span>
+                <span className='px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full'>
+                  ✓ AI Analysis Complete
+                </span>
+                <span className='px-3 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full'>
+                  ✓ Ready for Q&A
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Quick Actions */}
-          <div className='space-y-3 mt-auto'>
-            <div className='p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200'>
+            {/* Quick Tips */}
+            <div className='p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 mb-4'>
               <h4 className='font-semibold text-blue-900 mb-2 text-sm'>
                 Quick Tips
               </h4>
@@ -89,7 +89,10 @@ export default function VideoDisplay({ videoId, onReset }: VideoDisplayProps) {
                 <li>• Get explanations of complex concepts</li>
               </ul>
             </div>
+          </div>
 
+          {/* Analyze Another Video Button - Always Visible */}
+          <div className='border-t border-gray-100 pt-3 mt-3 flex-shrink-0'>
             <button
               onClick={onReset}
               className='w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors text-sm font-medium'

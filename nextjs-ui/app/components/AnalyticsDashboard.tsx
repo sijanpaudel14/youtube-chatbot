@@ -59,15 +59,20 @@ export default function AnalyticsDashboard({
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      const data = await api.getDashboardData()
-      setDashboardData(data)
       setError('')
+      console.log('🔍 Fetching dashboard data...')
+
+      const data = await api.getDashboardData()
+      console.log('✅ Dashboard data received:', data)
+
+      setDashboardData(data)
 
       // Cache the data for future use
       if (onDataLoad) {
         onDataLoad(data)
       }
     } catch (err) {
+      console.error('❌ Dashboard data fetch error:', err)
       setError(
         err instanceof Error ? err.message : 'Failed to load dashboard data'
       )
@@ -241,7 +246,7 @@ export default function AnalyticsDashboard({
         <div className='divide-y divide-gray-200'>
           {dashboardData.videos.map((video) => (
             <div key={video.video_id} className='p-6'>
-              <div className='flex items-start justify-between'>
+              <div className='flex flex-col md:flex-row md:items-start md:justify-between gap-4'>
                 <div className='flex-1'>
                   {/* Video ID and Status */}
                   <div className='flex items-center gap-3 mb-3'>
@@ -337,10 +342,10 @@ export default function AnalyticsDashboard({
                 </div>
 
                 {/* Action Buttons */}
-                <div className='flex gap-2'>
+                <div className='flex flex-col sm:flex-row gap-2 md:flex-col md:gap-2 md:w-auto w-full sm:w-auto'>
                   <button
                     onClick={() => setSelectedVideo(video.video_id)}
-                    className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                    className={`px-4 py-2 text-sm rounded-lg border transition-colors w-full sm:w-auto md:w-24 ${
                       selectedVideo === video.video_id
                         ? 'bg-blue-600 text-white border-blue-600'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -350,7 +355,7 @@ export default function AnalyticsDashboard({
                   </button>
                   <button
                     onClick={() => handleExport(video.video_id)}
-                    className='px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1'
+                    className='px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto md:w-24'
                   >
                     <Download className='w-3 h-3' />
                     Export

@@ -177,7 +177,7 @@ export default function SentimentAnalysis({
   }
 
   return (
-    <div className='bg-white rounded-lg border border-gray-200 overflow-hidden'>
+    <div className='bg-white rounded-lg border border-gray-200 h-full overflow-y-auto'>
       {/* Header */}
       {showHeader && (
         <div className='px-6 py-4 bg-gradient-to-r from-pink-50 to-purple-50 border-b border-gray-200'>
