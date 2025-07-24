@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: youtube-rag-backend
+    env: python
+    plan: free
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r backend/requirements.txt
+    startCommand: |
+      cd backend
+      export PYTHONPATH="/opt/render/project/src:$PYTHONPATH"
+      python -m uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: PROXY_USERNAME
+        sync: false
+      - key: PROXY_PASSWORD
+        sync: false

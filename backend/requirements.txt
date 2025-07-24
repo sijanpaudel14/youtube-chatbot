@@ -1,0 +1,41 @@
+# Core FastAPI Backend Dependencies
+fastapi==0.115.14
+uvicorn[standard]==0.34.0
+pydantic==2.11.7
+python-multipart==0.0.20
+
+# YouTube RAG Chatbot Dependencies
+youtube-transcript-api==1.2.1
+langchain==0.3.26
+langchain-community==0.3.27
+langchain-google-genai==2.1.8
+langchain-core==0.3.71
+langchain-text-splitters==0.3.8
+
+# Vector Database & Embeddings
+faiss-cpu==1.11.0.post1
+
+# Translation
+deep-translator==1.11.4
+
+# Environment & Configuration
+python-dotenv==1.1.1
+
+# HTTP & Requests
+requests==2.32.3
+httpx==0.28.1
+
+# Text Processing
+tiktoken==0.9.0
+
+# Google AI (google-generativeai is included via langchain-google-genai)
+google-api-core==2.25.1
+google-auth==2.40.3
+
+# Utilities
+numpy==2.2.0
+typing-extensions==4.12.2
+
+# Required for LangChain
+SQLAlchemy==2.0.41
+tenacity==9.1.2

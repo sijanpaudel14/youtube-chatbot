@@ -1,0 +1,6 @@
+# Essential dependencies for YouTube RAG Chatbot
+youtube-transcript-api
+langchain-community
+langchain_google_genai
+faiss-cpu
+tiktoken
