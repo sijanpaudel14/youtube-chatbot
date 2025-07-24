@@ -186,11 +186,11 @@ export default function SmartSummary({
 
     // Replace **text** with <strong>text</strong>
     const boldRegex = /\*\*(.*?)\*\*/g
-    
+
     const parts = []
     let lastIndex = 0
     let match
-    
+
     while ((match = boldRegex.exec(cleanedText)) !== null) {
       // Add text before the match
       if (match.index > lastIndex) {
@@ -198,17 +198,22 @@ export default function SmartSummary({
         // Split by newlines and create proper line breaks
         const lines = textBefore.split('\n')
         lines.forEach((line, lineIndex) => {
-          if (lineIndex > 0) parts.push(<br key={`br-${match.index}-${lineIndex}`} />)
+          if (lineIndex > 0)
+            parts.push(<br key={`br-${match.index}-${lineIndex}`} />)
           if (line.trim()) parts.push(line)
         })
       }
-      
+
       // Add the bold text
-      parts.push(<strong key={match.index} className="font-semibold text-gray-900">{match[1]}</strong>)
-      
+      parts.push(
+        <strong key={match.index} className='font-semibold text-gray-900'>
+          {match[1]}
+        </strong>
+      )
+
       lastIndex = match.index + match[0].length
     }
-    
+
     // Add remaining text
     if (lastIndex < cleanedText.length) {
       const remainingText = cleanedText.slice(lastIndex)
@@ -218,27 +223,27 @@ export default function SmartSummary({
         if (line.trim()) parts.push(line)
       })
     }
-    
+
     return parts.length > 0 ? parts : [cleanedText]
   }
 
   // Function to process and split key takeaways properly
   const processKeyTakeaways = (takeaways: string[]) => {
     const processed = []
-    
+
     for (const takeaway of takeaways) {
       // Split by lines and process each
       const lines = takeaway.split('\n')
       let currentTakeaway = ''
-      
+
       for (const line of lines) {
         const trimmedLine = line.trim()
-        
+
         // Skip empty lines and standalone numbers
         if (!trimmedLine || /^\d+$/.test(trimmedLine)) {
           continue
         }
-        
+
         // If line starts with * or bullet, it's a new takeaway
         if (trimmedLine.startsWith('*') || trimmedLine.startsWith('•')) {
           // Save previous takeaway if it exists
@@ -256,14 +261,14 @@ export default function SmartSummary({
           }
         }
       }
-      
+
       // Add the last takeaway
       if (currentTakeaway) {
         processed.push(currentTakeaway.trim())
       }
     }
-    
-    return processed.filter(t => t.length > 0)
+
+    return processed.filter((t) => t.length > 0)
   }
 
   const tabs = [
@@ -550,16 +555,18 @@ export default function SmartSummary({
                 Key Takeaways
               </h4>
               <div className='space-y-2'>
-                {processKeyTakeaways(summary.key_takeaways).map((takeaway, index) => (
-                  <div key={index} className='flex items-start gap-3'>
-                    <div className='flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold'>
-                      {index + 1}
+                {processKeyTakeaways(summary.key_takeaways).map(
+                  (takeaway, index) => (
+                    <div key={index} className='flex items-start gap-3'>
+                      <div className='flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold'>
+                        {index + 1}
+                      </div>
+                      <div className='text-gray-700 leading-relaxed'>
+                        {parseMarkdownText(takeaway)}
+                      </div>
                     </div>
-                    <div className='text-gray-700 leading-relaxed'>
-                      {parseMarkdownText(takeaway)}
-                    </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </div>
           </div>
