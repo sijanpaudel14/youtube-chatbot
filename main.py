@@ -136,10 +136,10 @@ class YouTubeRAGChatbot:
         """Set up the embedding and LLM models"""
         # Set up YouTube API with proxy support for better reliability
         self.ytt_api = YouTubeTranscriptApi(
-            proxy_config=WebshareProxyConfig(
-                proxy_username=proxy_username,
-                proxy_password=proxy_password,
-            )
+            # proxy_config=WebshareProxyConfig(
+            #     proxy_username=proxy_username,
+            #     proxy_password=proxy_password,
+            # )
         )
 
         # Set up embedding model
